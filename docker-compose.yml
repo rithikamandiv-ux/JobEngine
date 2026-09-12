@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: jobengine-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: jobengine
+      POSTGRES_USER: jobengine
+      POSTGRES_PASSWORD: localdev
+    ports:
+      - "5432:5432"
+    volumes:
+      - jobengine-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobengine -d jobengine"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  jobengine-pgdata:
