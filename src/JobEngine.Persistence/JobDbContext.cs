@@ -16,4 +16,21 @@ public class JobDbContext : DbContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(JobDbContext).Assembly);
     }
+    
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        IncrementVersions();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void IncrementVersions()
+    {
+        foreach (var entry in ChangeTracker.Entries<Job>())
+        {
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.Version++;
+            }
+        }
+    }
 }
