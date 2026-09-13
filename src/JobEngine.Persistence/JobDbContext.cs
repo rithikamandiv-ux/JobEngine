@@ -23,7 +23,7 @@ public class JobDbContext : DbContext
         return base.SaveChangesAsync(cancellationToken);
     }
 
-    private void IncrementVersions()
+   private void IncrementVersions()
     {
         foreach (var entry in ChangeTracker.Entries<Job>())
         {
