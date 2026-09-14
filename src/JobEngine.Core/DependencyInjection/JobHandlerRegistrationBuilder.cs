@@ -5,6 +5,7 @@ namespace JobEngine.Core.DependencyInjection;
 
 public class JobHandlerRegistrationBuilder
 {
+    private readonly HashSet<Type> _payloadTypes = [];
     private readonly Dictionary<string, Type> _adapterTypes =
         new(StringComparer.OrdinalIgnoreCase);
 
@@ -28,6 +29,13 @@ public class JobHandlerRegistrationBuilder
             throw new InvalidOperationException(
                 $"A handler is already registered for job type '{jobType}'.");
         }
+        
+        if (!_payloadTypes.Add(typeof(TPayload)))
+        {
+            throw new InvalidOperationException(
+                $"Payload type '{typeof(TPayload).Name}' is already used by another handler. " +
+                "Each handler must have a distinct payload type.");
+        }
 
         Services.AddScoped<IJobHandler<TPayload>, THandler>();
         Services.AddScoped<JobHandlerAdapter<TPayload>>();
@@ -36,6 +44,8 @@ public class JobHandlerRegistrationBuilder
 
         return this;
     }
+    
+    
 
     internal IReadOnlyDictionary<string, Type> BuildMap() => _adapterTypes;
 }
