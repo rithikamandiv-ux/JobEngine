@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/JobEngine.Core/JobEngine.Core.csproj" />
     <Project Path="src/JobEngine.Persistence/JobEngine.Persistence.csproj" />
+    <Project Path="src/JobEngine.SampleHandlers/JobEngine.SampleHandlers.csproj" />
     <Project Path="src/JobEngine.Worker/JobEngine.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
