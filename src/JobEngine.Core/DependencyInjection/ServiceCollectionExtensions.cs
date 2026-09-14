@@ -15,6 +15,8 @@ public static class ServiceCollectionExtensions
         var map = builder.BuildMap();
 
         services.AddSingleton<IJobHandlerRegistry>(_ => new JobHandlerRegistry(map));
+        
+        services.AddScoped<IJobDispatcher, JobDispatcher>();
 
         return services;
     }
