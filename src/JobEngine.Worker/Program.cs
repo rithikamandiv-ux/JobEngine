@@ -5,6 +5,8 @@ using JobEngine.Worker;
 using Microsoft.EntityFrameworkCore;
 using JobEngine.Worker.Configuration;
 using Microsoft.Extensions.Options;
+using JobEngine.Core.Storage;
+using JobEngine.Persistence.Storage;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -12,6 +14,8 @@ builder.Services.AddDbContext<JobDbContext>(options =>
     options
         .UseNpgsql(builder.Configuration.GetConnectionString("JobEngine"))
         .UseSnakeCaseNamingConvention());
+
+builder.Services.AddScoped<IJobStore, PostgresJobStore>();
 
 builder.Services.AddJobHandlers(handlers => handlers
     .AddHandler<DelayedGreetingHandler, DelayedGreetingPayload>("delayed-greeting"));

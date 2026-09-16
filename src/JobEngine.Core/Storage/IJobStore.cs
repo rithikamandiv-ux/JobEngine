@@ -1,0 +1,12 @@
+namespace JobEngine.Core.Storage;
+
+public interface IJobStore
+{
+    Task<Job?> TryClaimNextAsync(string workerId, CancellationToken cancellationToken);
+
+    Task MarkSucceededAsync(Job job, CancellationToken cancellationToken);
+
+    Task MarkFailedAsync(Job job, string error, CancellationToken cancellationToken);
+
+    Task ReleaseClaimAsync(Job job, CancellationToken cancellationToken);
+}
