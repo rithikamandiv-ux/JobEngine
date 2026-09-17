@@ -22,6 +22,8 @@ public class JobDispatcher : IJobDispatcher
 
         var adapter = (IJobHandlerAdapter)_serviceProvider.GetRequiredService(adapterType);
 
-        return adapter.HandleAsync(job.PayloadJson, cancellationToken);
+        var context = new JobExecutionContext(job.Id, job.Attempts, job.MaxAttempts);
+
+        return adapter.HandleAsync(job.PayloadJson, context, cancellationToken);
     }
 }

@@ -14,11 +14,12 @@ public class DelayedGreetingHandler : IJobHandler<DelayedGreetingPayload>
 
     public async Task HandleAsync(
         DelayedGreetingPayload payload,
+        JobExecutionContext context,
         CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Starting greeting, will wait {DelayMs}ms",
-            payload.DelayMilliseconds);
+            "Starting greeting for job {JobId}, attempt {Attempt}/{MaxAttempts}, waiting {DelayMs}ms",
+            context.JobId, context.Attempt, context.MaxAttempts, payload.DelayMilliseconds);
 
         if (payload.DelayMilliseconds > 0)
         {

@@ -9,9 +9,12 @@ public class JobHandlerAdapter<TPayload> : IJobHandlerAdapter
         _handler = handler;
     }
 
-    public Task HandleAsync(string payloadJson, CancellationToken cancellationToken)
+    public Task HandleAsync(
+        string payloadJson,
+        JobExecutionContext context,
+        CancellationToken cancellationToken)
     {
         var payload = JobPayloadSerializer.Deserialize<TPayload>(payloadJson);
-        return _handler.HandleAsync(payload, cancellationToken);
+        return _handler.HandleAsync(payload, context, cancellationToken);
     }
 }

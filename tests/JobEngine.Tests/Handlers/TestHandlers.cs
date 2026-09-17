@@ -21,26 +21,37 @@ public class RecordingHandler : IJobHandler<GreetingPayload>
         _log = log;
     }
 
-    public Task HandleAsync(GreetingPayload payload, CancellationToken cancellationToken)
+    public Task HandleAsync(
+        GreetingPayload payload,
+        JobExecutionContext context,
+        CancellationToken cancellationToken)
     {
         _log.Calls.Add(payload.Name);
+        _log.Contexts.Add(context);
         return Task.CompletedTask;
     }
 }
 
 public class ThrowingHandler : IJobHandler<FailingPayload>
 {
-    public Task HandleAsync(FailingPayload payload, CancellationToken cancellationToken) =>
+    public Task HandleAsync(
+        FailingPayload payload,
+        JobExecutionContext context,
+        CancellationToken cancellationToken) =>
         throw new InvalidOperationException("handler failed");
+}
+
+public class AnotherGreetingHandler : IJobHandler<GreetingPayload>
+{
+    public Task HandleAsync(
+        GreetingPayload payload,
+        JobExecutionContext context,
+        CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
 public class HandlerCallLog
 {
     public List<string> Calls { get; } = [];
-}
 
-public class AnotherGreetingHandler : IJobHandler<GreetingPayload>
-{
-    public Task HandleAsync(GreetingPayload payload, CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+    public List<JobExecutionContext> Contexts { get; } = [];
 }

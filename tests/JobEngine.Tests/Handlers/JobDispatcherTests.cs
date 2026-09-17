@@ -129,4 +129,46 @@ public class JobDispatcherTests
                 .AddHandler<RecordingHandler, GreetingPayload>("greeting")
                 .AddHandler<AnotherGreetingHandler, GreetingPayload>("greeting-2")));
     }
+    
+    [Fact]
+    public async Task DispatchAsync_PassesExecutionContext_ToHandler()
+    {
+        await using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        var dispatcher = scope.ServiceProvider.GetRequiredService<IJobDispatcher>();
+        var log = scope.ServiceProvider.GetRequiredService<HandlerCallLog>();
+
+        var job = NewJob("greeting", """{"name":"Rithika"}""");
+        job.Id = 42;
+        job.Attempts = 2;
+        job.MaxAttempts = 3;
+
+        await dispatcher.DispatchAsync(job, CancellationToken.None);
+
+        var context = Assert.Single(log.Contexts);
+
+        Assert.Equal(42, context.JobId);
+        Assert.Equal(2, context.Attempt);
+        Assert.Equal(3, context.MaxAttempts);
+        Assert.False(context.IsFinalAttempt);
+    }
+
+    [Fact]
+    public async Task DispatchAsync_MarksFinalAttempt_WhenAttemptsExhausted()
+    {
+        await using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        var dispatcher = scope.ServiceProvider.GetRequiredService<IJobDispatcher>();
+        var log = scope.ServiceProvider.GetRequiredService<HandlerCallLog>();
+
+        var job = NewJob("greeting", """{"name":"Rithika"}""");
+        job.Attempts = 3;
+        job.MaxAttempts = 3;
+
+        await dispatcher.DispatchAsync(job, CancellationToken.None);
+
+        Assert.True(Assert.Single(log.Contexts).IsFinalAttempt);
+    }
 }
