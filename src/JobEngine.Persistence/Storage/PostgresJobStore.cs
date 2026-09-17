@@ -109,6 +109,35 @@ public class PostgresJobStore : IJobStore
         job.RunAt = null;
         return UpdateAsync(job, cancellationToken);
     }
+    
+    public async Task<int> ReleaseStaleClaimsAsync(
+        TimeSpan staleAfter,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        var threshold = DateTime.UtcNow.Subtract(staleAfter);
+
+        var released = await _db.Database.SqlQuery<long>(
+                $"""
+                 UPDATE jobs
+                 SET status = 'Pending',
+                     claimed_by = NULL,
+                     claimed_at = NULL,
+                     run_at = NULL,
+                     version = version + 1
+                 WHERE id IN (
+                     SELECT id FROM jobs
+                     WHERE status = 'Claimed' AND claimed_at < {threshold}
+                     ORDER BY claimed_at
+                     FOR UPDATE SKIP LOCKED
+                     LIMIT {batchSize}
+                 )
+                 RETURNING id
+                 """)
+            .ToListAsync(cancellationToken);
+
+        return released.Count;
+    }
 
     private Task UpdateAsync(Job job, CancellationToken cancellationToken)
     {

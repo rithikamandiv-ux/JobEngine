@@ -33,7 +33,9 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Worker {WorkerId} started", _identity.Id);
+        _logger.LogInformation(
+            "Worker {WorkerId} started, polling every {IntervalMs}ms",
+            _identity.Id, _pollingInterval.TotalMilliseconds);
 
         while (!stoppingToken.IsCancellationRequested)
         {

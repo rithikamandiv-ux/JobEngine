@@ -8,6 +8,9 @@ public interface IJobStore
 
     Task MarkForRetryAsync(
         Job job, DateTime retryAt, Exception exception, CancellationToken cancellationToken);
+    
+    Task<int> ReleaseStaleClaimsAsync(
+        TimeSpan staleAfter, int batchSize, CancellationToken cancellationToken);
 
     Task MarkFailedAsync(Job job, Exception exception, CancellationToken cancellationToken);
 

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using JobEngine.Core.Storage;
 using JobEngine.Persistence.Storage;
 using JobEngine.Core.Retry;
+using JobEngine.Core.Recovery;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -33,6 +34,17 @@ builder.Services.AddOptions<RetryOptions>()
     .Validate(o => o.MaxDelaySeconds >= o.BaseDelaySeconds,
         "MaxDelaySeconds must be at least BaseDelaySeconds.")
     .ValidateOnStart();
+
+builder.Services.AddOptions<RecoveryOptions>()
+    .Bind(builder.Configuration.GetSection(RecoveryOptions.SectionName))
+    .Validate(o => o.StaleClaimThresholdSeconds > 0,
+        "StaleClaimThresholdSeconds must be greater than zero.")
+    .Validate(o => o.ScanIntervalSeconds > 0,
+        "ScanIntervalSeconds must be greater than zero.")
+    .Validate(o => o.BatchSize > 0, "BatchSize must be greater than zero.")
+    .ValidateOnStart();
+
+builder.Services.AddHostedService<StaleClaimRecoveryService>();
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IRetryPolicy, ExponentialBackoffRetryPolicy>();
