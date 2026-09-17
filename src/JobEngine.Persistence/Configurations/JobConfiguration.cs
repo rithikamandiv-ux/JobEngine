@@ -34,7 +34,10 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.Property(j => j.ClaimedBy)
             .HasMaxLength(100);
 
-        builder.Property(j => j.LastError)
+        builder.Property(j => j.LastErrorMessage)
+            .HasColumnType("text");
+
+        builder.Property(j => j.LastErrorDetail)
             .HasColumnType("text");
 
         builder.Property(j => j.Version)

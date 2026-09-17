@@ -26,7 +26,9 @@ public class Job
 
     public DateTime? CompletedAt { get; set; }
 
-    public string? LastError { get; set; }
+    public string? LastErrorMessage { get; set; }
+    
+    public string? LastErrorDetail { get; set; }
 
     public int Version { get; set; }
 

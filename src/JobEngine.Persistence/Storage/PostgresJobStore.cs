@@ -52,7 +52,7 @@ public class PostgresJobStore : IJobStore
     public Task MarkFailedAsync(Job job, string error, CancellationToken cancellationToken)
     {
         job.Status = JobStatus.Failed;
-        job.LastError = error;
+        job.LastErrorMessage = error;
         job.CompletedAt = DateTime.UtcNow;
         return UpdateAsync(job, cancellationToken);
     }
