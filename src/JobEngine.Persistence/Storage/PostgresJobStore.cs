@@ -49,13 +49,57 @@ public class PostgresJobStore : IJobStore
         return UpdateAsync(job, cancellationToken);
     }
 
-    public Task MarkFailedAsync(Job job, string error, CancellationToken cancellationToken)
+    public Task MarkForRetryAsync(
+        Job job,
+        DateTime retryAt,
+        Exception exception,
+        CancellationToken cancellationToken)
     {
-        job.Status = JobStatus.Failed;
-        job.LastErrorMessage = error;
-        job.CompletedAt = DateTime.UtcNow;
+        job.Status = JobStatus.Pending;
+        job.ScheduledAt = retryAt;
+        job.ClaimedBy = null;
+        job.ClaimedAt = null;
+        job.RunAt = null;
+        RecordError(job, exception);
+
         return UpdateAsync(job, cancellationToken);
     }
+
+    public Task MarkFailedAsync(
+        Job job,
+        Exception exception,
+        CancellationToken cancellationToken)
+    {
+        job.Status = JobStatus.Failed;
+        job.CompletedAt = DateTime.UtcNow;
+        RecordError(job, exception);
+
+        return UpdateAsync(job, cancellationToken);
+    }
+
+    public Task MarkDeadLetteredAsync(
+        Job job,
+        Exception exception,
+        CancellationToken cancellationToken)
+    {
+        job.Status = JobStatus.DeadLetter;
+        job.CompletedAt = DateTime.UtcNow;
+        RecordError(job, exception);
+
+        return UpdateAsync(job, cancellationToken);
+    }
+
+    private const int MaxErrorMessageLength = 1000;
+    private const int MaxErrorDetailLength = 20000;
+
+    private static void RecordError(Job job, Exception exception)
+    {
+        job.LastErrorMessage = Truncate(exception.Message, MaxErrorMessageLength);
+        job.LastErrorDetail = Truncate(exception.ToString(), MaxErrorDetailLength);
+    }
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength];
 
     public Task ReleaseClaimAsync(Job job, CancellationToken cancellationToken)
     {

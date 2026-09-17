@@ -1,5 +1,6 @@
 using JobEngine.Core;
 using JobEngine.Core.Handlers;
+using JobEngine.Core.Retry;
 using JobEngine.Core.Storage;
 using JobEngine.Worker.Configuration;
 using Microsoft.Extensions.Options;
@@ -12,13 +13,17 @@ public class Worker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly WorkerIdentity _identity;
     private readonly TimeSpan _pollingInterval;
+    private readonly IRetryPolicy _retryPolicy;
 
     public Worker(
         ILogger<Worker> logger,
         IServiceScopeFactory scopeFactory,
         WorkerIdentity identity,
+        IRetryPolicy retryPolicy,
         IOptions<WorkerOptions> options)
+        
     {
+        _retryPolicy = retryPolicy;
         _logger = logger;
         _scopeFactory = scopeFactory;
         _identity = identity;
@@ -104,9 +109,35 @@ public class Worker : BackgroundService
         }
         catch (Exception ex)
         {
-            await store.MarkFailedAsync(job, ex.ToString(), CancellationToken.None);
+            var decision = _retryPolicy.Decide(job, ex);
 
-            _logger.LogError(ex, "Job {JobId} failed", job.Id);
+            switch (decision.Action)
+            {
+                case RetryAction.Retry:
+                    await store.MarkForRetryAsync(
+                        job, decision.RetryAt!.Value, ex, CancellationToken.None);
+
+                    _logger.LogWarning(ex,
+                        "Job {JobId} failed on attempt {Attempt}/{MaxAttempts}, retrying at {RetryAt}",
+                        job.Id, job.Attempts, job.MaxAttempts, decision.RetryAt);
+                    break;
+
+                case RetryAction.Fail:
+                    await store.MarkFailedAsync(job, ex, CancellationToken.None);
+
+                    _logger.LogError(ex,
+                        "Job {JobId} failed permanently: {Reason}",
+                        job.Id, ex.GetType().Name);
+                    break;
+
+                case RetryAction.DeadLetter:
+                    await store.MarkDeadLetteredAsync(job, ex, CancellationToken.None);
+
+                    _logger.LogError(ex,
+                        "Job {JobId} dead-lettered after {Attempts} attempts",
+                        job.Id, job.Attempts);
+                    break;
+            }
         }
     }
 }

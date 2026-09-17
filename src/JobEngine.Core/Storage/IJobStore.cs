@@ -6,7 +6,13 @@ public interface IJobStore
 
     Task MarkSucceededAsync(Job job, CancellationToken cancellationToken);
 
-    Task MarkFailedAsync(Job job, string error, CancellationToken cancellationToken);
+    Task MarkForRetryAsync(
+        Job job, DateTime retryAt, Exception exception, CancellationToken cancellationToken);
+
+    Task MarkFailedAsync(Job job, Exception exception, CancellationToken cancellationToken);
+
+    Task MarkDeadLetteredAsync(
+        Job job, Exception exception, CancellationToken cancellationToken);
 
     Task ReleaseClaimAsync(Job job, CancellationToken cancellationToken);
 }

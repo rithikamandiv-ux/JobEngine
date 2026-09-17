@@ -23,7 +23,7 @@ public class ExponentialBackoffRetryPolicy : IRetryPolicy
     {
         if (IsPermanentFailure(exception))
         {
-            return RetryDecision.DeadLetter();
+            return RetryDecision.Fail();
         }
 
         if (!job.CanRetry)
