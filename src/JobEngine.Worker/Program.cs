@@ -53,6 +53,10 @@ builder.Services.AddSingleton(sp =>
     WorkerIdentity.Create(
         sp.GetRequiredService<IOptions<WorkerOptions>>().Value.WorkerName));
 
+builder.Services.AddJobHandlers(handlers => handlers
+    .AddHandler<DelayedGreetingHandler, DelayedGreetingPayload>("delayed-greeting")
+    .AddHandler<FlakyHandler, FlakyPayload>("flaky"));
+
 builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();
