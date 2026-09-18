@@ -7,7 +7,8 @@ public class PostgresFixture : IAsyncLifetime
     private readonly PostgreSqlContainer _container =
         new PostgreSqlBuilder("postgres:17").Build();
 
-    public string ConnectionString => _container.GetConnectionString();
+    public string ConnectionString =>
+        _container.GetConnectionString() + ";Include Error Detail=true";
 
     public async Task InitializeAsync()
     {

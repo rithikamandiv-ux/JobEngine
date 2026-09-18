@@ -36,7 +36,7 @@ public abstract class DatabaseTestBase : IAsyncLifetime
         await connection.OpenAsync();
 
         await using var command = connection.CreateCommand();
-        command.CommandText = "TRUNCATE TABLE jobs RESTART IDENTITY;";
+        command.CommandText = "TRUNCATE TABLE job_executions, jobs RESTART IDENTITY;";
         await command.ExecuteNonQueryAsync();
     }
 
