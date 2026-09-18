@@ -138,6 +138,44 @@ public class PostgresJobStore : IJobStore
 
         return released.Count;
     }
+    
+    public async Task<long> StartExecutionAsync(
+        Job job,
+        string workerId,
+        CancellationToken cancellationToken)
+    {
+        var execution = new JobExecution
+        {
+            JobId = job.Id,
+            Attempt = job.Attempts,
+            WorkerId = workerId,
+            StartedAt = DateTime.UtcNow
+        };
+
+        _db.Executions.Add(execution);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return execution.Id;
+    }
+
+    public async Task CompleteExecutionAsync(
+        long executionId,
+        ExecutionOutcome outcome,
+        CancellationToken cancellationToken)
+    {
+        var execution = await _db.Executions
+            .SingleOrDefaultAsync(e => e.Id == executionId, cancellationToken);
+
+        if (execution is null)
+        {
+            return;
+        }
+
+        execution.Outcome = outcome;
+        execution.CompletedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
 
     private Task UpdateAsync(Job job, CancellationToken cancellationToken)
     {

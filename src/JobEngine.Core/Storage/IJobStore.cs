@@ -18,4 +18,9 @@ public interface IJobStore
         Job job, Exception exception, CancellationToken cancellationToken);
 
     Task ReleaseClaimAsync(Job job, CancellationToken cancellationToken);
+    
+    Task<long> StartExecutionAsync(Job job, string workerId, CancellationToken cancellationToken);
+
+    Task CompleteExecutionAsync(
+        long executionId, ExecutionOutcome outcome, CancellationToken cancellationToken);
 }

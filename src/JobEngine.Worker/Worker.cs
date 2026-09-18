@@ -4,6 +4,7 @@ using JobEngine.Core.Retry;
 using JobEngine.Core.Storage;
 using JobEngine.Worker.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobEngine.Worker;
 
@@ -83,7 +84,7 @@ public class Worker : BackgroundService
         return true;
     }
 
-    private async Task ExecuteJobAsync(
+        private async Task ExecuteJobAsync(
         IServiceProvider provider,
         Job job,
         CancellationToken stoppingToken)
@@ -91,17 +92,37 @@ public class Worker : BackgroundService
         var store = provider.GetRequiredService<IJobStore>();
         var dispatcher = provider.GetRequiredService<IJobDispatcher>();
 
+        long executionId;
+
+        try
+        {
+            executionId = await store.StartExecutionAsync(
+                job, _identity.Id, stoppingToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex,
+                "Could not record execution start for job {JobId} attempt {Attempt}. " +
+                "This may indicate duplicate execution.",
+                job.Id, job.Attempts);
+            throw;
+        }
+
         try
         {
             await dispatcher.DispatchAsync(job, stoppingToken);
 
             await store.MarkSucceededAsync(job, CancellationToken.None);
+            await store.CompleteExecutionAsync(
+                executionId, ExecutionOutcome.Succeeded, CancellationToken.None);
 
             _logger.LogInformation("Job {JobId} succeeded", job.Id);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
             await store.ReleaseClaimAsync(job, CancellationToken.None);
+            await store.CompleteExecutionAsync(
+                executionId, ExecutionOutcome.Released, CancellationToken.None);
 
             _logger.LogWarning(
                 "Job {JobId} was interrupted by shutdown and released back to Pending",
@@ -118,6 +139,8 @@ public class Worker : BackgroundService
                 case RetryAction.Retry:
                     await store.MarkForRetryAsync(
                         job, decision.RetryAt!.Value, ex, CancellationToken.None);
+                    await store.CompleteExecutionAsync(
+                        executionId, ExecutionOutcome.Retrying, CancellationToken.None);
 
                     _logger.LogWarning(ex,
                         "Job {JobId} failed on attempt {Attempt}/{MaxAttempts}, retrying at {RetryAt}",
@@ -126,6 +149,8 @@ public class Worker : BackgroundService
 
                 case RetryAction.Fail:
                     await store.MarkFailedAsync(job, ex, CancellationToken.None);
+                    await store.CompleteExecutionAsync(
+                        executionId, ExecutionOutcome.Failed, CancellationToken.None);
 
                     _logger.LogError(ex,
                         "Job {JobId} failed permanently: {Reason}",
@@ -134,6 +159,8 @@ public class Worker : BackgroundService
 
                 case RetryAction.DeadLetter:
                     await store.MarkDeadLetteredAsync(job, ex, CancellationToken.None);
+                    await store.CompleteExecutionAsync(
+                        executionId, ExecutionOutcome.DeadLettered, CancellationToken.None);
 
                     _logger.LogError(ex,
                         "Job {JobId} dead-lettered after {Attempts} attempts",
