@@ -30,7 +30,9 @@ public abstract class DatabaseTestBase : IAsyncLifetime
         await ClearDataAsync();
     }
 
-    private async Task ClearDataAsync()
+    protected string ConnectionString => _fixture.ConnectionString;
+
+    protected async Task ClearDataAsync()
     {
         await using var connection = new NpgsqlConnection(_fixture.ConnectionString);
         await connection.OpenAsync();
@@ -39,6 +41,5 @@ public abstract class DatabaseTestBase : IAsyncLifetime
         command.CommandText = "TRUNCATE TABLE job_executions, jobs RESTART IDENTITY;";
         await command.ExecuteNonQueryAsync();
     }
-
     public Task DisposeAsync() => Task.CompletedTask;
 }
