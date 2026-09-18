@@ -11,6 +11,7 @@ public class JobDbContext : DbContext
     }
 
     public DbSet<Job> Jobs => Set<Job>();
+    public DbSet<JobExecution> Executions => Set<JobExecution>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
