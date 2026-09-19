@@ -147,6 +147,7 @@ public class PostgresJobStore : IJobStore
         var execution = new JobExecution
         {
             JobId = job.Id,
+            Generation = job.Generation,
             Attempt = job.Attempts,
             WorkerId = workerId,
             StartedAt = DateTime.UtcNow

@@ -31,6 +31,8 @@ public class Job
     public string? LastErrorDetail { get; set; }
 
     public int Version { get; set; }
+    
+    public int Generation { get; set; }
 
     public bool CanRetry => Attempts < MaxAttempts;
 }

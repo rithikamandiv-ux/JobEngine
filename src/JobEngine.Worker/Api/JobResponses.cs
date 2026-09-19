@@ -8,6 +8,7 @@ public record JobSummaryResponse(
     string Status,
     int Attempts,
     int MaxAttempts,
+    int Generation,
     DateTime CreatedAt,
     DateTime ScheduledAt,
     DateTime? CompletedAt,
@@ -19,6 +20,7 @@ public record JobSummaryResponse(
         job.Status.ToString(),
         job.Attempts,
         job.MaxAttempts,
+        job.Generation,
         job.CreatedAt,
         job.ScheduledAt,
         job.CompletedAt,
@@ -32,6 +34,7 @@ public record JobDetailResponse(
     string Status,
     int Attempts,
     int MaxAttempts,
+    int Generation,
     DateTime CreatedAt,
     DateTime ScheduledAt,
     DateTime? RunAt,
@@ -48,18 +51,20 @@ public record JobDetailResponse(
         job.Status.ToString(),
         job.Attempts,
         job.MaxAttempts,
+        job.Generation,
         job.CreatedAt,
         job.ScheduledAt,
         job.RunAt,
         job.ClaimedBy,
         job.ClaimedAt,
         job.CompletedAt,
-        job.LastErrorMessage,
+        job.LastErrorMessage, 
         job.LastErrorDetail);
 }
 
 public record JobExecutionResponse(
     long Id,
+    int Generation,
     int Attempt,
     string WorkerId,
     DateTime StartedAt,
@@ -69,6 +74,7 @@ public record JobExecutionResponse(
 {
     public static JobExecutionResponse From(JobExecution execution) => new(
         execution.Id,
+        execution.Generation,
         execution.Attempt,
         execution.WorkerId,
         execution.StartedAt,
@@ -78,6 +84,7 @@ public record JobExecutionResponse(
             ? null
             : (execution.CompletedAt.Value - execution.StartedAt).TotalMilliseconds);
 }
+
 
 public record PagedResponse<T>(
     IReadOnlyList<T> Items,

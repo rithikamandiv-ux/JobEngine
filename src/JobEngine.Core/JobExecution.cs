@@ -15,6 +15,8 @@ public class JobExecution
     public DateTime? CompletedAt { get; set; }
 
     public ExecutionOutcome? Outcome { get; set; }
+    
+    public int Generation { get; set; }
 
     public Job Job { get; set; } = null!;
 }

@@ -27,9 +27,9 @@ public class JobExecutionConfiguration : IEntityTypeConfiguration<JobExecution>
             .WithMany()
             .HasForeignKey(e => e.JobId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasIndex(e => new { e.JobId, e.Attempt })
+        
+        builder.HasIndex(e => new { e.JobId, e.Generation, e.Attempt })
             .IsUnique()
-            .HasDatabaseName("ux_job_executions_job_id_attempt");
+            .HasDatabaseName("ux_job_executions_job_id_generation_attempt");
     }
 }
