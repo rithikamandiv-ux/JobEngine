@@ -9,6 +9,7 @@ using JobEngine.Worker;
 using JobEngine.Worker.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using JobEngine.Worker.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,5 +66,7 @@ app.MapGet("/health", async (JobDbContext db, CancellationToken ct) =>
         ? Results.Ok(new { status = "healthy" })
         : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
 });
+
+app.MapJobEndpoints();
 
 app.Run();
