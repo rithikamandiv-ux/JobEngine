@@ -17,7 +17,7 @@ function formatTime(iso: string | null) {
     return new Date(iso).toLocaleString();
 }
 
-export function JobList() {
+export default function JobList() {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const status = (searchParams.get('status') as JobStatus | null) ?? undefined;

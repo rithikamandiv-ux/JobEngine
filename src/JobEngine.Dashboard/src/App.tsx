@@ -1,6 +1,6 @@
 import { Link, Route, Routes } from 'react-router-dom';
-import { JobList } from './pages/JobList';
-import { JobDetail } from './pages/JobDetail';
+import JobList from './pages/JobList';
+import JobDetail from './pages/JobDetail';
 
 export default function App() {
     return (
