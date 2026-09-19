@@ -8,9 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="EFCore.NamingConventions" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
@@ -26,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\JobEngine.Core\JobEngine.Core.csproj" />
     <ProjectReference Include="..\..\src\JobEngine.Persistence\JobEngine.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\JobEngine.Worker\JobEngine.Worker.csproj" />
   </ItemGroup>
 
 </Project>

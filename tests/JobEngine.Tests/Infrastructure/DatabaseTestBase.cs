@@ -23,7 +23,7 @@ public abstract class DatabaseTestBase : IAsyncLifetime
         return new JobDbContext(options);
     }
 
-    public async Task InitializeAsync()
+    public virtual async Task InitializeAsync()
     {
         await using var db = CreateContext();
         await db.Database.MigrateAsync();
@@ -41,5 +41,5 @@ public abstract class DatabaseTestBase : IAsyncLifetime
         command.CommandText = "TRUNCATE TABLE job_executions, jobs RESTART IDENTITY;";
         await command.ExecuteNonQueryAsync();
     }
-    public Task DisposeAsync() => Task.CompletedTask;
+    public virtual Task DisposeAsync() => Task.CompletedTask;
 }

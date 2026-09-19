@@ -70,3 +70,5 @@ app.MapGet("/health", async (JobDbContext db, CancellationToken ct) =>
 app.MapJobEndpoints();
 
 app.Run();
+
+public partial class Program;
