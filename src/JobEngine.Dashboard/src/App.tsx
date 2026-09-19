@@ -1,20 +1,24 @@
-import { useEffect, useState } from 'react'
-import { api } from './api/client'
-import type { Stats } from './types/api'
+import { Link, Route, Routes } from 'react-router-dom';
+import { JobList } from './pages/JobList';
+import { JobDetail } from './pages/JobDetail';
 
 export default function App() {
-    const [stats, setStats] = useState<Stats | null>(null)
-    const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        api.getStats().then(setStats).catch(e => setError(String(e)))
-    }, [])
-
     return (
-        <div className="min-h-screen bg-slate-50 p-8">
-            <h1 className="text-2xl font-semibold text-slate-900">JobEngine</h1>
-            {error && <p className="mt-4 text-red-600">{error}</p>}
-            <pre className="mt-4 text-sm">{JSON.stringify(stats, null, 2)}</pre>
+        <div className="min-h-screen bg-slate-50">
+            <header className="border-b border-slate-200 bg-white">
+                <div className="mx-auto max-w-6xl px-6 py-4">
+                    <Link to="/" className="text-lg font-semibold text-slate-900">
+                        JobEngine
+                    </Link>
+                </div>
+            </header>
+
+            <main className="mx-auto max-w-6xl px-6 py-6">
+                <Routes>
+                    <Route path="/" element={<JobList />} />
+                    <Route path="/jobs/:id" element={<JobDetail />} />
+                </Routes>
+            </main>
         </div>
-    )
+    );
 }
