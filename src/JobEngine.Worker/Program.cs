@@ -1,16 +1,16 @@
 using JobEngine.Core.DependencyInjection;
+using JobEngine.Core.Recovery;
+using JobEngine.Core.Retry;
+using JobEngine.Core.Storage;
 using JobEngine.Persistence;
+using JobEngine.Persistence.Storage;
 using JobEngine.SampleHandlers;
 using JobEngine.Worker;
-using Microsoft.EntityFrameworkCore;
 using JobEngine.Worker.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using JobEngine.Core.Storage;
-using JobEngine.Persistence.Storage;
-using JobEngine.Core.Retry;
-using JobEngine.Core.Recovery;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<JobDbContext>(options =>
     options
@@ -20,7 +20,8 @@ builder.Services.AddDbContext<JobDbContext>(options =>
 builder.Services.AddScoped<IJobStore, PostgresJobStore>();
 
 builder.Services.AddJobHandlers(handlers => handlers
-    .AddHandler<DelayedGreetingHandler, DelayedGreetingPayload>("delayed-greeting"));
+    .AddHandler<DelayedGreetingHandler, DelayedGreetingPayload>("delayed-greeting")
+    .AddHandler<FlakyHandler, FlakyPayload>("flaky"));
 
 builder.Services.AddOptions<WorkerOptions>()
     .Bind(builder.Configuration.GetSection(WorkerOptions.SectionName))
@@ -44,20 +45,25 @@ builder.Services.AddOptions<RecoveryOptions>()
     .Validate(o => o.BatchSize > 0, "BatchSize must be greater than zero.")
     .ValidateOnStart();
 
-builder.Services.AddHostedService<StaleClaimRecoveryService>();
-
-builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddSingleton<IRetryPolicy, ExponentialBackoffRetryPolicy>();
-
 builder.Services.AddSingleton(sp =>
     WorkerIdentity.Create(
         sp.GetRequiredService<IOptions<WorkerOptions>>().Value.WorkerName));
 
-builder.Services.AddJobHandlers(handlers => handlers
-    .AddHandler<DelayedGreetingHandler, DelayedGreetingPayload>("delayed-greeting")
-    .AddHandler<FlakyHandler, FlakyPayload>("flaky"));
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IRetryPolicy, ExponentialBackoffRetryPolicy>();
 
 builder.Services.AddHostedService<Worker>();
+builder.Services.AddHostedService<StaleClaimRecoveryService>();
 
-var host = builder.Build();
-host.Run();
+var app = builder.Build();
+
+app.MapGet("/health", async (JobDbContext db, CancellationToken ct) =>
+{
+    var canConnect = await db.Database.CanConnectAsync(ct);
+
+    return canConnect
+        ? Results.Ok(new { status = "healthy" })
+        : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+});
+
+app.Run();
