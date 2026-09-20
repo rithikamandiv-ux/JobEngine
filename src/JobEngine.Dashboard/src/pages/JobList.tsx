@@ -3,6 +3,7 @@ import { useJobs } from '../api/hooks';
 import { StatusBadge } from '../components/StatusBadge';
 import { StatsCards } from '../components/StatsCards';
 import type { JobStatus } from '../types/api';
+import { NewJobForm } from '../components/NewJobForm';
 
 const statuses: JobStatus[] = [
     'Pending',
@@ -43,6 +44,7 @@ export default function JobList() {
 
     return (
         <div className="space-y-6">
+            <NewJobForm/>
             <StatsCards />
 
             <div className="flex flex-wrap gap-2">
